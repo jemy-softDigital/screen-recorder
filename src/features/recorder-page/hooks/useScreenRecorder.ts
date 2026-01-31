@@ -90,6 +90,12 @@ export const useScreenRecorder = (): [
           audio: systemAudioSupport,
         });
 
+        if (systemAudioSupport && screen.getAudioTracks().length === 0) {
+          setError("Please Enable System Audio Permission");
+          setLoading(false);
+          return;
+        }
+
         setScreenStream(screen);
         const tracks: MediaStreamTrack[] = screen.getVideoTracks();
         if (systemAudioSupport) audioTracks.push(...screen.getAudioTracks());
