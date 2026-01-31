@@ -6,6 +6,8 @@ import { mixAudioTracks } from "../utils/mixAudioTracks";
 interface RecorderOptions {
   audioSource: AudioSource;
   captureWebcam: boolean;
+  selectedAudioDevice: string;
+  selectedVideoDevice: string;
 }
 
 interface ScreenRecorderState {
@@ -35,32 +37,23 @@ export const useScreenRecorder = (): [
   const [status, setStatus] = useState<RecordingStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const [recordedBlobUrl, setRecordedBlobUrl] = useState<string | null>(null);
-  const [webcamStream, setWebcamStream] = useState<MediaStream | null>(null);
-  const [screenStream, setScreenStream] = useState<MediaStream | null>(null);
 
+  const webcamStreamRef = useRef<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
   const combinedStreamRef = useRef<MediaStream | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
+  const screenStreamRef = useRef<MediaStream | null>(null);
 
   const cleanupStreams = useCallback(() => {
-    if (combinedStreamRef.current) {
-      combinedStreamRef.current.getTracks().forEach((track) => track.stop());
-      combinedStreamRef.current = null;
-    }
-    if (micStreamRef.current) {
-      micStreamRef.current.getTracks().forEach((track) => track.stop());
-      micStreamRef.current = null;
-    }
-    if (webcamStream) {
-      webcamStream.getTracks().forEach((track) => track.stop());
-      setWebcamStream(null);
-    }
-    if (screenStream) {
-      screenStream.getTracks().forEach((track) => track.stop());
-      setScreenStream(null);
-    }
-  }, [webcamStream, screenStream]);
+    combinedStreamRef.current?.getTracks().forEach((t) => t.stop());
+    micStreamRef.current?.getTracks().forEach((t) => t.stop());
+    webcamStreamRef.current?.getTracks().forEach((t) => t.stop());
+    screenStreamRef.current?.getTracks().forEach((t) => t.stop());
+    combinedStreamRef.current = null;
+    micStreamRef.current = null;
+    screenStreamRef.current = null;
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -91,22 +84,30 @@ export const useScreenRecorder = (): [
         });
 
         if (systemAudioSupport && screen.getAudioTracks().length === 0) {
-          setError("Please Enable System Audio Permission");
+          setError("Please Enable System Audio Permission To Use System Audio");
           setLoading(false);
           return;
         }
 
-        setScreenStream(screen);
+        screenStreamRef.current = screen;
         const tracks: MediaStreamTrack[] = screen.getVideoTracks();
         if (systemAudioSupport) audioTracks.push(...screen.getAudioTracks());
 
         if (micSupport || cameraSupport) {
           const userMedia = await navigator.mediaDevices.getUserMedia({
-            audio: micSupport,
-            video: cameraSupport,
+            audio: micSupport
+              ? {
+                  deviceId: { exact: options.selectedAudioDevice },
+                }
+              : false,
+            video: cameraSupport
+              ? {
+                  deviceId: { exact: options.selectedVideoDevice },
+                }
+              : false,
           });
           micStreamRef.current = userMedia;
-          setWebcamStream(userMedia);
+          webcamStreamRef.current = userMedia;
           tracks.push(...userMedia.getVideoTracks());
           if (micSupport) audioTracks.push(...userMedia.getAudioTracks());
         }
@@ -145,9 +146,8 @@ export const useScreenRecorder = (): [
         };
 
         screen.getVideoTracks()[0].onended = () => {
-          if (mediaRecorderRef.current?.state !== "inactive") {
+          if (mediaRecorderRef.current?.state !== "inactive")
             mediaRecorderRef.current?.stop();
-          }
         };
 
         mediaRecorderRef.current = mediaRecorder;
@@ -155,7 +155,10 @@ export const useScreenRecorder = (): [
         setStatus("recording");
         setLoading(false);
       } catch (err) {
-        setError((err as Error).message);
+        const error = err as Error;
+        if (error.message === "Permission denied")
+          setError("Please Check Permissions For Mic or Video");
+        else setError(error.message);
         setStatus("idle");
         setLoading(false);
         cleanupStreams();
@@ -215,34 +218,31 @@ export const useScreenRecorder = (): [
     recordedChunksRef.current = [];
   }, [cleanupStreams, recordedBlobUrl]);
 
-  const toggleWebcam = useCallback(
-    async (enable: boolean) => {
-      if (enable && !webcamStream) {
-        try {
-          const webcam = await navigator.mediaDevices.getUserMedia({
-            video: { width: 320, height: 240 },
-            audio: false,
-          });
-          setWebcamStream(webcam);
-        } catch (err) {
-          console.warn("Webcam access denied:", err);
-          setError("Webcam access denied");
-        }
-      } else if (!enable && webcamStream) {
-        webcamStream.getTracks().forEach((track) => track.stop());
-        setWebcamStream(null);
+  const toggleWebcam = useCallback(async (enable: boolean) => {
+    if (enable && !webcamStreamRef.current) {
+      try {
+        const webcam = await navigator.mediaDevices.getUserMedia({
+          video: { width: 320, height: 240 },
+          audio: false,
+        });
+        webcamStreamRef.current = webcam;
+      } catch (err) {
+        console.warn("Webcam access denied:", err);
+        setError("Webcam access denied");
       }
-    },
-    [webcamStream],
-  );
+    } else if (!enable && webcamStreamRef.current) {
+      webcamStreamRef.current.getTracks().forEach((track) => track.stop());
+      webcamStreamRef.current = null;
+    }
+  }, []);
 
   return [
     {
       status,
       error,
       recordedBlobUrl,
-      webcamStream,
       loading,
+      webcamStream: webcamStreamRef.current,
       combinedStream: combinedStreamRef.current,
     },
     {

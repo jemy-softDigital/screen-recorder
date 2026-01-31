@@ -6,3 +6,9 @@ interface RecorderOptions {
   audioSource: AudioSource;
   captureWebcam: boolean;
 }
+
+
+interface MediaDevice {
+  value: string;
+  label: string;
+}

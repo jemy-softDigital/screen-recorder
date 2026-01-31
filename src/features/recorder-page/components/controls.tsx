@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import MediaSelector from "./MediaSelector";
 
 export interface ControlsProps {
   micEnabled: boolean;
@@ -35,6 +36,10 @@ export interface ControlsProps {
   handleStopRecording: () => void;
   handleDownload: () => void;
   handleReset: () => void;
+  selectedAudioDevice: string;
+  setSelectedAudioDevice: (value: string) => void;
+  selectedVideoDevice: string;
+  setSelectedVideoDevice: (value: string) => void;
 }
 
 const Controls: React.FC<ControlsProps> = ({
@@ -56,11 +61,15 @@ const Controls: React.FC<ControlsProps> = ({
   handleStopRecording,
   handleDownload,
   handleReset,
+  selectedAudioDevice,
+  setSelectedAudioDevice,
+  selectedVideoDevice,
+  setSelectedVideoDevice,
 }) => {
   return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl">
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
-        <div className="flex flex-wrap items-center gap-3">
+    <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center max-md:justify-center gap-3">
           <Button
             variant={micEnabled ? "default" : "outline"}
             disabled={isRecording || isPaused}
@@ -113,12 +122,19 @@ const Controls: React.FC<ControlsProps> = ({
             )}
             <span className="hidden sm:inline">Webcam</span>
           </Button>
+          <MediaSelector
+            isRecording={isRecording}
+            valueAudio={selectedAudioDevice}
+            onChangeAudio={setSelectedAudioDevice}
+            valueVideo={selectedVideoDevice}
+            onChangeVideo={setSelectedVideoDevice}
+          />
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 max-md:w-full max-md:flex-wrap">
           {isIdle && (
             <Button
               onClick={handleStartRecording}
-              className="bg-red-600 hover:bg-red-700 text-white  font-medium"
+              className="bg-red-600 hover:bg-red-700 text-white  font-medium max-md:grow"
               isLoading={loading}
             >
               <Circle className="w-5 h-5 fill-current" />
@@ -128,7 +144,7 @@ const Controls: React.FC<ControlsProps> = ({
           {isRecording && (
             <Button
               onClick={handlePauseRecording}
-              className="bg-yellow-600 hover:bg-yellow-700 text-white "
+              className="bg-yellow-600 hover:bg-yellow-700 text-white max-md:grow"
             >
               <Pause className="w-5 h-5" />
               Pause
@@ -137,7 +153,7 @@ const Controls: React.FC<ControlsProps> = ({
           {isPaused && (
             <Button
               onClick={handleResumeRecording}
-              className="bg-green-600 hover:bg-green-700 text-white px-6 "
+              className="bg-green-600 hover:bg-green-700 text-white px-6 max-md:grow"
             >
               <Play className="w-5 h-5" />
               Resume
@@ -146,7 +162,7 @@ const Controls: React.FC<ControlsProps> = ({
           {(isRecording || isPaused) && (
             <Button
               onClick={handleStopRecording}
-              className="bg-white text-black hover:bg-white/90 "
+              className="bg-white text-black hover:bg-white/90 max-md:grow"
             >
               <Square className="w-5 h-5 fill-current" />
               Stop
@@ -158,7 +174,7 @@ const Controls: React.FC<ControlsProps> = ({
               <Button
                 size="lg"
                 onClick={handleDownload}
-                className="bg-white text-black hover:bg-white/90   font-medium "
+                className="bg-white text-black hover:bg-white/90   font-medium max-md:grow"
               >
                 <Download className="w-5 h-5" />
                 Download
@@ -168,7 +184,7 @@ const Controls: React.FC<ControlsProps> = ({
                 size="lg"
                 variant="outline"
                 onClick={handleReset}
-                className="bg-white text-black hover:bg-white/90   font-medium "
+                className="bg-white text-black hover:bg-white/90   font-medium max-md:grow"
               >
                 <RotateCcw className="w-5 h-5" />
                 New Recording

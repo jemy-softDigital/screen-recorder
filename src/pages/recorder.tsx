@@ -24,6 +24,10 @@ export const Recorder = () => {
   const [micEnabled, setMicEnabled] = useState(true);
   const [systemAudioEnabled, setSystemAudioEnabled] = useState(true);
   const [webcamEnabled, setWebcamEnabled] = useState(true);
+  const [selectedAudioDevice, setSelectedAudioDevice] =
+    useState<string>("none");
+  const [selectedVideoDevice, setSelectedVideoDevice] =
+    useState<string>("none");
 
   const {
     seconds,
@@ -55,25 +59,29 @@ export const Recorder = () => {
     await actions.startRecording({
       audioSource: getAudioSource(),
       captureWebcam: webcamEnabled,
+      selectedAudioDevice,
+      selectedVideoDevice,
     });
-    resetTimer();
     startTimer();
   };
 
   const handleStopRecording = () => {
     actions.stopRecording();
-    resetTimer();
   };
 
   const handlePauseRecording = () => {
     actions.pauseRecording();
-    pauseTimer();
   };
 
   const handleResumeRecording = () => {
     actions.resumeRecording();
     startTimer();
   };
+
+  useEffect(() => {
+    if (status !== "recording") pauseTimer();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
 
   const handleDownload = () => {
     const timestamp = new Date().toISOString().split("T")[0];
@@ -130,15 +138,10 @@ export const Recorder = () => {
 
           <Controls
             micEnabled={micEnabled}
-            systemAudioEnabled={systemAudioEnabled}
-            webcamEnabled={webcamEnabled}
-            isIdle={isIdle}
-            isRecording={isRecording}
-            isPaused={isPaused}
-            isStopped={isStopped}
-            recordedBlobUrl={recordedBlobUrl}
             setMicEnabled={setMicEnabled}
+            systemAudioEnabled={systemAudioEnabled}
             setSystemAudioEnabled={setSystemAudioEnabled}
+            webcamEnabled={webcamEnabled}
             handleToggleWebcam={handleToggleWebcam}
             handleStartRecording={handleStartRecording}
             handlePauseRecording={handlePauseRecording}
@@ -146,7 +149,16 @@ export const Recorder = () => {
             handleStopRecording={handleStopRecording}
             handleDownload={handleDownload}
             handleReset={handleReset}
+            isIdle={isIdle}
+            isRecording={isRecording}
+            isPaused={isPaused}
+            isStopped={isStopped}
+            recordedBlobUrl={recordedBlobUrl}
             loading={loading}
+            selectedAudioDevice={selectedAudioDevice}
+            setSelectedAudioDevice={setSelectedAudioDevice}
+            selectedVideoDevice={selectedVideoDevice}
+            setSelectedVideoDevice={setSelectedVideoDevice}
           />
         </div>
       </main>
