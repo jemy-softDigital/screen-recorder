@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { getVideoBitrate } from "../utils/getVideoBitrate";
 import { getSupportedMimeType } from "../utils/getSupportedMimeType";
 import { mixAudioTracks } from "../utils/mixAudioTracks";
+import { createCompositeStream } from "../utils/createCompositeStream";
 
 interface RecorderOptions {
   audioSource: AudioSource;
@@ -90,7 +91,7 @@ export const useScreenRecorder = (): [
         }
 
         screenStreamRef.current = screen;
-        const tracks: MediaStreamTrack[] = screen.getVideoTracks();
+        const tracks: MediaStreamTrack[] = [];
         if (systemAudioSupport) audioTracks.push(...screen.getAudioTracks());
 
         if (micSupport || cameraSupport) {
@@ -108,9 +109,15 @@ export const useScreenRecorder = (): [
           });
           micStreamRef.current = userMedia;
           webcamStreamRef.current = userMedia;
-          tracks.push(...userMedia.getVideoTracks());
           if (micSupport) audioTracks.push(...userMedia.getAudioTracks());
         }
+
+        const videoStream = createCompositeStream(
+          screenStreamRef.current,
+          webcamStreamRef.current ?? undefined,
+        );
+
+        tracks.push(...videoStream.getVideoTracks());
 
         const mixedAudioConfiguration = mixAudioTracks(audioTracks);
         if (mixedAudioConfiguration) tracks.push(mixedAudioConfiguration);

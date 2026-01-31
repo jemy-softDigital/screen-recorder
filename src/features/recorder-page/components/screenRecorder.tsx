@@ -21,12 +21,12 @@ const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
   isPaused,
   isStopped,
   screenStream,
-  webcamStream,
+  // webcamStream,
   recordedBlobUrl,
   screenPreviewRef,
-  webcamPreviewRef,
+  // webcamPreviewRef,
   playbackRef,
-  webcamEnabled,
+  // webcamEnabled,
 }) => {
   return (
     <div className="flex-1 relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 min-h-100">
@@ -60,7 +60,7 @@ const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
           className="w-full h-100 object-contain bg-black"
         />
       )}
-      {webcamEnabled && webcamStream && (isRecording || isPaused) && (
+      {/* {webcamEnabled && webcamStream && (isRecording || isPaused) && (
         <div className="absolute bottom-4 right-4 w-48 h-36 rounded-xl overflow-hidden border-2 border-white/20 shadow-2xl bg-black">
           <video
             ref={webcamPreviewRef}
@@ -70,7 +70,7 @@ const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
             className="w-full h-full object-cover -scale-x-100"
           />
         </div>
-      )}
+      )} */}
     </div>
   );
 };
