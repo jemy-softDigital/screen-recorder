@@ -92,6 +92,7 @@ export const useScreenRecorder = (): [
 
         screenStreamRef.current = screen;
         const tracks: MediaStreamTrack[] = [];
+        // tracks.push(...screen.getVideoTracks());
         if (systemAudioSupport) audioTracks.push(...screen.getAudioTracks());
 
         if (micSupport || cameraSupport) {
@@ -109,6 +110,7 @@ export const useScreenRecorder = (): [
           });
           micStreamRef.current = userMedia;
           webcamStreamRef.current = userMedia;
+          // if (cameraSupport) tracks.push(...userMedia.getVideoTracks());
           if (micSupport) audioTracks.push(...userMedia.getAudioTracks());
         }
 
