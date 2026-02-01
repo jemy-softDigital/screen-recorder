@@ -45,7 +45,6 @@ export const useWebcam = (onError: () => void) => {
   const cleanup = useCallback(() => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => {
-        console.log(t);
         t.stop();
       });
       streamRef.current = null;
