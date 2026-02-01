@@ -92,10 +92,14 @@ export const useScreenRecorder = (): [
 
         screenStreamRef.current = screen;
         const tracks: MediaStreamTrack[] = [];
-        // tracks.push(...screen.getVideoTracks());
         if (systemAudioSupport) audioTracks.push(...screen.getAudioTracks());
 
         if (micSupport || cameraSupport) {
+          if (micSupport && options.selectedAudioDevice === "none")
+            return setError("Please Check Permissions For Mic or Video");
+          if (cameraSupport && options.selectedVideoDevice === "none")
+            return setError("Please Check Permissions For Mic or Video");
+
           const userMedia = await navigator.mediaDevices.getUserMedia({
             audio: micSupport
               ? {
@@ -110,7 +114,6 @@ export const useScreenRecorder = (): [
           });
           micStreamRef.current = userMedia;
           webcamStreamRef.current = userMedia;
-          // if (cameraSupport) tracks.push(...userMedia.getVideoTracks());
           if (micSupport) audioTracks.push(...userMedia.getAudioTracks());
         }
 
@@ -167,7 +170,9 @@ export const useScreenRecorder = (): [
         const error = err as Error;
         if (error.message === "Permission denied")
           setError("Please Check Permissions For Mic or Video");
-        else setError(error.message);
+        else setError(error.message ?? "Check Your Permissions");
+        console.log(error);
+
         setStatus("idle");
         setLoading(false);
         cleanupStreams();
